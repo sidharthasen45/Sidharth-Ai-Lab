@@ -12,7 +12,8 @@ export default function CTA() {
     e.preventDefault();
     setStatus('sending');
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
@@ -43,7 +44,7 @@ export default function CTA() {
 
       setStatus('success');
       setTimeout(() => setStatus('idle'), 4000);
-      e.currentTarget.reset();
+      form.reset();
     } catch (error) {
       console.error(error);
       setStatus('idle');
