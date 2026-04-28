@@ -6,12 +6,48 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function CTA() {
-  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert('Thank you! We will be in touch shortly.');
-    setEmail('');
+    setStatus('sending');
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+    };
+
+    try {
+      await Promise.all([
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            access_key: 'afe8a8c0-7ca3-4c8f-8912-15cb665dbd15',
+            ...data,
+          }),
+        }),
+        fetch('https://api.sheetbest.com/sheets/87460759-ad8b-467d-9a41-a9f526a2d471', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+      ]);
+
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 4000);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error(error);
+      setStatus('idle');
+    }
   };
 
   return (
@@ -39,28 +75,52 @@ export default function CTA() {
             Get your Free Marketing Audit today. We&apos;ll analyze your current strategy and show you exactly where AI can increase your ROI.
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mb-8">
+          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto mb-8">
+            <input 
+              type="text" 
+              name="name"
+              placeholder="Your Name" 
+              required
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder:text-gray-500"
+            />
             <input 
               type="email" 
-              placeholder="Enter your work email" 
+              name="email"
+              placeholder="Your Email" 
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder:text-gray-500"
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder:text-gray-500"
             />
-            <button type="submit" className="btn-glow text-white px-8 py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-              Get Audit <ArrowRight size={16} />
+            <input 
+              type="tel" 
+              name="phone"
+              placeholder="Your Phone" 
+              required
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder:text-gray-500"
+            />
+            <button 
+              type="submit" 
+              disabled={status === 'sending' || status === 'success'}
+              className="btn-glow md:mt-0 w-full md:w-auto text-white px-8 py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform duration-300 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {status === 'sending' ? (
+                'Sending...'
+              ) : status === 'success' ? (
+                'Submitted ✅'
+              ) : (
+                <>Get Audit <ArrowRight size={16} /></>
+              )}
             </button>
           </form>
 
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-            <span className="w-12 h-[1px] bg-white/10"></span>
-            <span>OR CONNECT DIRECTLY</span>
-            <span className="w-12 h-[1px] bg-white/10"></span>
-          </div>
-
-          <div className="mt-8">
-            <Link href="https://wa.me/919937017783" target="_blank" className="inline-flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-6 py-3 rounded-full hover:bg-[#25D366]/20 transition-colors border border-[#25D366]/20 font-medium hover:scale-105 transition-transform duration-300">
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm font-medium text-gray-400">
+              Free audit • No spam • Quick response
+            </p>
+            <Link 
+              href="https://wa.me/919937017783" 
+              target="_blank" 
+              className="inline-flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-6 py-3 rounded-full hover:bg-[#25D366]/20 transition-colors border border-[#25D366]/20 font-medium hover:scale-105 transition-transform duration-300"
+            >
               <MessageCircle size={20} />
               Chat on WhatsApp
             </Link>

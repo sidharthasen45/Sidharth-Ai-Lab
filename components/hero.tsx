@@ -1,10 +1,55 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { ArrowRight, ChevronRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function Hero() {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus('sending');
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+    };
+
+    try {
+      await Promise.all([
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            access_key: 'afe8a8c0-7ca3-4c8f-8912-15cb665dbd15',
+            ...data,
+          }),
+        }),
+        fetch('https://api.sheetbest.com/sheets/87460759-ad8b-467d-9a41-a9f526a2d471', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+      ]);
+
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 4000);
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error(error);
+      setStatus('idle');
+    }
+  };
+
   return (
     <section className="relative min-h-[95vh] flex items-center justify-center pt-24 pb-16 overflow-hidden">
       {/* Background patterns and glowing orbs */}
@@ -46,15 +91,58 @@ export default function Hero() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-12 flex flex-col sm:flex-row gap-4 items-center justify-center w-full"
+          className="mt-12 w-full max-w-5xl flex flex-col items-center"
         >
-          <Link href="#contact" className="btn-glow text-white px-8 py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 w-full sm:w-auto overflow-hidden">
-            <span>Get Free Growth Plan</span>
-            <ArrowRight size={16} />
-          </Link>
-          <Link href="#work" className="glass text-white px-8 py-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 w-full sm:w-auto h-[52px] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300">
-            See our results
-          </Link>
+          <form onSubmit={handleSubmit} className="w-full relative z-20 glass p-2 md:p-3 rounded-2xl md:rounded-full flex flex-col md:flex-row gap-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            <input 
+              type="text" 
+              name="name"
+              placeholder="Name" 
+              required
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl md:rounded-full px-6 py-4 focus:outline-none focus:ring-1 focus:ring-[#818cf8] focus:border-[#818cf8] focus:shadow-[0_0_15px_rgba(129,140,248,0.3)] focus:bg-white/10 transition-all duration-300 text-white placeholder:text-gray-500"
+            />
+            <input 
+              type="email" 
+              name="email"
+              placeholder="Email" 
+              required
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl md:rounded-full px-6 py-4 focus:outline-none focus:ring-1 focus:ring-[#818cf8] focus:border-[#818cf8] focus:shadow-[0_0_15px_rgba(129,140,248,0.3)] focus:bg-white/10 transition-all duration-300 text-white placeholder:text-gray-500"
+            />
+            <input 
+              type="tel" 
+              name="phone"
+              placeholder="Phone" 
+              required
+              className="w-full md:flex-1 bg-white/5 border border-white/10 rounded-xl md:rounded-full px-6 py-4 focus:outline-none focus:ring-1 focus:ring-[#818cf8] focus:border-[#818cf8] focus:shadow-[0_0_15px_rgba(129,140,248,0.3)] focus:bg-white/10 transition-all duration-300 text-white placeholder:text-gray-500"
+            />
+            <button 
+              type="submit" 
+              disabled={status === 'sending' || status === 'success'}
+              className="btn-glow text-white px-8 py-4 rounded-xl md:rounded-full font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {status === 'sending' ? (
+                'Sending...'
+              ) : status === 'success' ? (
+                'Submitted ✅'
+              ) : (
+                <>Get Free Audit <ArrowRight size={16} /></>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <p className="text-sm font-medium text-gray-400">
+              Free audit • No spam • Quick response
+            </p>
+            <Link 
+              href="https://wa.me/919937017783" 
+              target="_blank" 
+              className="inline-flex items-center gap-2 text-[#25D366] hover:text-white px-5 py-2.5 rounded-full hover:bg-[#25D366] transition-all duration-300 font-medium text-sm group"
+            >
+              <MessageCircle size={18} className="stroke-[#25D366] group-hover:stroke-white transition-colors" />
+              Chat on WhatsApp
+            </Link>
+          </div>
         </motion.div>
 
         {/* Trust markers / logos */}
